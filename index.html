@@ -2,38 +2,46 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ozon Сканер ПВЗ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ozon ПВЗ Сканер</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
+
         body {
-            font-family: system-ui, -apple-system, 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif;
             background: #0B0F1C;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
+
         .app {
-            width: 100%;
             max-width: 450px;
+            margin: 0 auto;
             background: #0B0F1C;
             min-height: 100vh;
             position: relative;
         }
+
+        /* Хедер */
         .header {
             padding: 20px;
             background: #0B0F1C;
             border-bottom: 1px solid #1F2A3E;
         }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .logo-icon {
             background: #FF6B00;
@@ -47,34 +55,34 @@
             color: white;
         }
         .logo-text {
-            font-size: 20px;
             font-weight: 700;
+            font-size: 18px;
             color: white;
         }
         .badge {
             background: #1E293B;
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 6px 14px;
+            border-radius: 40px;
             font-size: 12px;
             color: #FF9F6E;
-            margin-left: auto;
         }
-        .scanner-container {
+
+        /* Сканер */
+        .scanner-card {
             margin: 16px;
             background: #0F172A;
-            border-radius: 24px;
+            border-radius: 28px;
             overflow: hidden;
         }
-        .video-wrapper {
+        .video-container {
             position: relative;
             width: 100%;
-            aspect-ratio: 4/3;
+            aspect-ratio: 4 / 3;
             background: #000;
         }
-        video {
+        #reader {
             width: 100%;
             height: 100%;
-            object-fit: cover;
         }
         .scan-overlay {
             position: absolute;
@@ -82,14 +90,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            border: 2px solid #FF6B00;
-            border-radius: 20px;
+            pointer-events: none;
+            border: 2px solid rgba(255,107,0,0.5);
+            border-radius: 24px;
             box-shadow: inset 0 0 0 100vmax rgba(0,0,0,0.5);
             mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
-            pointer-events: none;
         }
         .scan-line {
             position: absolute;
@@ -97,29 +105,33 @@
             left: 5%;
             width: 90%;
             height: 2px;
-            background: #FF6B00;
-            animation: scan 2s infinite;
+            background: linear-gradient(90deg, transparent, #FF6B00, #FFA559, transparent);
+            animation: scanMove 2s infinite;
             pointer-events: none;
         }
-        @keyframes scan {
-            0% { top: 15%; }
-            50% { top: 80%; }
-            100% { top: 15%; }
+        @keyframes scanMove {
+            0% { top: 15%; opacity: 0.4; }
+            50% { top: 80%; opacity: 1; }
+            100% { top: 15%; opacity: 0.4; }
         }
         .toolbar {
             display: flex;
             gap: 12px;
             padding: 12px 16px;
+            background: #0F172A;
+            border-top: 1px solid #1E2A3A;
         }
         .btn {
             flex: 1;
             background: #FF6B00;
             border: none;
             padding: 12px;
-            border-radius: 40px;
+            border-radius: 60px;
             font-weight: 600;
+            font-size: 14px;
             color: white;
             cursor: pointer;
+            transition: 0.2s;
         }
         .btn-off {
             background: #1E293B;
@@ -128,50 +140,55 @@
         .btn-icon {
             background: #1E293B;
             border: none;
-            padding: 12px 16px;
-            border-radius: 40px;
+            padding: 12px 18px;
+            border-radius: 60px;
             color: white;
             cursor: pointer;
+            font-size: 16px;
         }
         .status {
             background: #111827;
-            margin: 8px 16px;
-            padding: 8px;
-            border-radius: 20px;
+            margin: 12px 16px;
+            padding: 10px;
+            border-radius: 30px;
             font-size: 12px;
             text-align: center;
             color: #94A3B8;
         }
+
+        /* Результаты */
         .results {
             margin: 16px;
             background: #0F172A;
-            border-radius: 24px;
+            border-radius: 28px;
             padding: 20px;
         }
         .results-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 16px;
         }
         .results-header h3 {
-            color: white;
             font-size: 18px;
+            color: white;
         }
         .clear-btn {
             background: none;
             border: none;
             color: #FF6B00;
+            font-size: 13px;
             cursor: pointer;
         }
         .list {
-            max-height: 250px;
+            max-height: 280px;
             overflow-y: auto;
         }
         .item {
             background: #1E293B;
             border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -181,16 +198,17 @@
             color: white;
             font-weight: 600;
             font-size: 14px;
+            word-break: break-all;
         }
         .item-time {
-            font-size: 10px;
+            font-size: 11px;
             color: #6B7280;
             margin-top: 4px;
         }
         .item-status {
             background: #0F172A;
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 30px;
             font-size: 11px;
             color: #4ADE80;
         }
@@ -199,9 +217,14 @@
             padding: 40px;
             color: #4B5563;
         }
-        .total {
+        .empty i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        .summary {
             margin-top: 16px;
-            padding-top: 12px;
+            padding-top: 16px;
             border-top: 1px solid #1F2A44;
             display: flex;
             justify-content: space-between;
@@ -213,63 +236,74 @@
             background: #FF6B00;
             border: none;
             padding: 14px;
-            border-radius: 40px;
+            border-radius: 60px;
             font-weight: 700;
+            font-size: 16px;
             color: white;
             margin-top: 16px;
             cursor: pointer;
         }
         .toast {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             background: #1E293B;
-            padding: 10px 20px;
-            border-radius: 40px;
+            padding: 12px 24px;
+            border-radius: 60px;
             color: white;
             font-size: 14px;
+            z-index: 200;
             border-left: 3px solid #FF6B00;
-            pointer-events: none;
+            white-space: nowrap;
         }
-        .hidden { display: none; }
+        .hidden {
+            display: none;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
     </style>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 <div class="app">
     <div class="header">
-        <div class="logo">
-            <div class="logo-icon">📦</div>
-            <div class="logo-text">Ozon ПВЗ</div>
-            <div class="badge">Приёмка</div>
+        <div class="header-top">
+            <div class="logo">
+                <div class="logo-icon">📦</div>
+                <div class="logo-text">Ozon ПВЗ</div>
+            </div>
+            <div class="badge">Приёмка товаров</div>
         </div>
     </div>
 
-    <div class="scanner-container">
-        <div class="video-wrapper">
-            <div id="reader" style="width:100%;height:100%"></div>
+    <div class="scanner-card">
+        <div class="video-container">
+            <div id="reader"></div>
             <div class="scan-overlay"></div>
             <div class="scan-line"></div>
         </div>
         <div class="toolbar">
-            <button id="startBtn" class="btn"><i class="fas fa-camera"></i> Запустить сканер</button>
+            <button id="startBtn" class="btn">📷 Включить камеру</button>
             <button id="torchBtn" class="btn-icon">🔦</button>
         </div>
-        <div id="status" class="status">📱 Нажмите "Запустить сканер"</div>
+        <div id="status" class="status">📱 Нажмите "Включить камеру"</div>
     </div>
 
     <div class="results">
         <div class="results-header">
             <h3>✅ Принятые товары</h3>
-            <button id="clearBtn" class="clear-btn">Очистить</button>
+            <button id="clearBtn" class="clear-btn">Очистить всё</button>
         </div>
         <div id="list" class="list">
             <div class="empty">
-                📷 Нет отсканированных товаров
+                <i>📷</i>
+                <p>Нет отсканированных товаров</p>
+                <span style="font-size: 12px;">Наведите камеру на штрихкод</span>
             </div>
         </div>
-        <div class="total">
+        <div class="summary">
             <span>Всего принято</span>
             <span id="total">0</span>
         </div>
@@ -294,28 +328,34 @@
     const statusDiv = document.getElementById('status');
     const toastDiv = document.getElementById('toast');
 
-    function showToast(msg) {
+    function showToast(msg, duration = 2000) {
         toastDiv.innerText = msg;
         toastDiv.classList.remove('hidden');
-        setTimeout(() => toastDiv.classList.add('hidden'), 2000);
+        setTimeout(() => toastDiv.classList.add('hidden'), duration);
     }
 
     function getTime() {
-        return new Date().toLocaleTimeString('ru-RU');
+        const now = new Date();
+        return now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
     function renderList() {
         if (scannedItems.length === 0) {
-            listDiv.innerHTML = '<div class="empty">📷 Нет отсканированных товаров</div>';
+            listDiv.innerHTML = `<div class="empty">
+                <i>📷</i>
+                <p>Нет отсканированных товаров</p>
+                <span style="font-size: 12px;">Наведите камеру на штрихкод</span>
+            </div>`;
             totalSpan.innerText = '0';
             return;
         }
+        
         let html = '';
         [...scannedItems].reverse().forEach(item => {
             html += `
                 <div class="item">
                     <div>
-                        <div class="item-code">📦 ${item.code}</div>
+                        <div class="item-code">📦 ${escapeHtml(item.code)}</div>
                         <div class="item-time">${item.time}</div>
                     </div>
                     <div class="item-status">✓ Принят</div>
@@ -326,47 +366,86 @@
         totalSpan.innerText = scannedItems.length;
     }
 
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
     function addBarcode(code) {
+        if (!code) return;
+        
         const now = Date.now();
         if (lastCode === code && now - lastTime < 1200) return;
         lastCode = code;
         lastTime = now;
         
-        scannedItems.push({ code: code, time: getTime() });
+        scannedItems.push({
+            code: code,
+            time: getTime()
+        });
         renderList();
         
-        if (navigator.vibrate) navigator.vibrate(100);
-        showToast(`✅ ${code} принят`);
+        // Вибрация
+        if (navigator.vibrate) navigator.vibrate(80);
+        
+        // Звук
+        try {
+            const audio = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audio.createOscillator();
+            const gain = audio.createGain();
+            osc.connect(gain);
+            gain.connect(audio.destination);
+            osc.frequency.value = 920;
+            gain.gain.value = 0.15;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audio.currentTime + 0.25);
+            osc.stop(audio.currentTime + 0.25);
+            audio.resume();
+        } catch(e) {}
+        
+        showToast(`✅ Товар ${code} принят`, 1000);
     }
 
     async function startScanner() {
-        if (isScanning) return;
+        if (isScanning) {
+            showToast("Сканер уже работает");
+            return;
+        }
         
         statusDiv.innerHTML = '🔄 Запрос доступа к камере...';
         
         try {
             if (html5QrCode) {
-                await html5QrCode.stop();
+                try {
+                    await html5QrCode.stop();
+                } catch(e) {}
             }
             
             html5QrCode = new Html5Qrcode("reader");
             
             const config = {
-                fps: 10,
-                qrbox: { width: 250, height: 200 },
-                aspectRatio: 4/3
+                fps: 15,
+                qrbox: { width: 280, height: 200 },
+                aspectRatio: 4/3,
+                videoConstraints: {
+                    facingMode: "environment"
+                }
             };
             
             await html5QrCode.start(
                 { facingMode: "environment" },
                 config,
                 (decodedText) => {
-                    if (decodedText) {
+                    if (decodedText && decodedText.length > 0) {
                         addBarcode(decodedText);
                     }
                 },
-                (error) => {
-                    // игнорируем ошибки сканирования
+                (errorMessage) => {
+                    // Игнорируем ошибки сканирования
                 }
             );
             
@@ -375,19 +454,20 @@
             startBtn.classList.add('btn-off');
             statusDiv.innerHTML = '✅ Камера работает. Наведите на штрихкод';
             statusDiv.style.color = '#4ADE80';
-            showToast("✅ Сканер запущен");
+            showToast("✅ Сканер запущен", 1500);
             
         } catch (err) {
-            console.error(err);
+            console.error("Ошибка:", err);
+            
             if (err === 'NotAllowedError') {
-                statusDiv.innerHTML = '❌ Нет доступа к камере. Разрешите в браузере и обновите страницу';
-                showToast("⚠️ Разрешите доступ к камере в браузере");
+                statusDiv.innerHTML = '❌ Нет доступа к камере. Разрешите в браузере';
+                showToast("⚠️ Разрешите доступ к камере в настройках браузера", 4000);
             } else if (err === 'NotFoundError') {
-                statusDiv.innerHTML = '❌ Камера не найдена';
-                showToast("Камера не найдена");
+                statusDiv.innerHTML = '❌ Камера не найдена на устройстве';
+                showToast("Камера не найдена", 3000);
             } else {
                 statusDiv.innerHTML = '❌ Ошибка: ' + (err.message || 'неизвестная ошибка');
-                showToast("Ошибка доступа к камере. Используйте HTTPS!");
+                showToast("Ошибка доступа к камере", 3000);
             }
         }
     }
@@ -399,7 +479,7 @@
             } catch(e) {}
         }
         isScanning = false;
-        startBtn.innerHTML = '📷 Запустить сканер';
+        startBtn.innerHTML = '📷 Включить камеру';
         startBtn.classList.remove('btn-off');
         statusDiv.innerHTML = '📱 Сканер остановлен';
         statusDiv.style.color = '#94A3B8';
@@ -407,18 +487,34 @@
 
     async function toggleTorch() {
         if (!isScanning || !html5QrCode) {
-            showToast("Сначала запустите сканер");
+            showToast("Сначала включите камеру");
             return;
         }
+        
         try {
-            const torch = await html5QrCode.applyVideoConstraints({ advanced: [{ torch: true }] });
-            showToast("🔦 Фонарик включён");
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const track = stream.getVideoTracks()[0];
+            const capabilities = track.getCapabilities();
+            
+            if (capabilities.torch) {
+                await track.applyConstraints({ advanced: [{ torch: !window.torchState }] });
+                window.torchState = !window.torchState;
+                showToast(window.torchState ? "🔦 Фонарик включён" : "💡 Фонарик выключен");
+                torchBtn.style.background = window.torchState ? '#FF6B00' : '#1E293B';
+            } else {
+                showToast("Фонарик не поддерживается");
+            }
+            stream.getTracks().forEach(t => t.stop());
         } catch(e) {
             showToast("Фонарик не поддерживается");
         }
     }
 
     function clearAll() {
+        if (scannedItems.length === 0) {
+            showToast("Список пуст");
+            return;
+        }
         scannedItems = [];
         lastCode = '';
         renderList();
@@ -427,19 +523,36 @@
 
     function confirmPickup() {
         if (scannedItems.length === 0) {
-            showToast("Нет товаров для приёмки");
+            showToast("❌ Нет товаров для приёмки");
             return;
         }
-        showToast(`📦 Принято ${scannedItems.length} товаров!`);
+        showToast(`📦 Приёмка оформлена! Принято ${scannedItems.length} товаров`, 3000);
+        
+        confirmBtn.style.background = "#2E8B57";
+        setTimeout(() => {
+            confirmBtn.style.background = "#FF6B00";
+        }, 300);
     }
 
+    // Обработчики
     startBtn.addEventListener('click', () => {
-        if (isScanning) stopScanner();
-        else startScanner();
+        if (isScanning) {
+            stopScanner();
+        } else {
+            startScanner();
+        }
     });
+    
     torchBtn.addEventListener('click', toggleTorch);
     clearBtn.addEventListener('click', clearAll);
     confirmBtn.addEventListener('click', confirmPickup);
+    
+    // Очистка при закрытии
+    window.addEventListener('beforeunload', () => {
+        if (html5QrCode && isScanning) {
+            html5QrCode.stop().catch(() => {});
+        }
+    });
 </script>
 </body>
 </html>
