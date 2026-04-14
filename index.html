@@ -3,73 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ozon ПВЗ Сканер</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Ozon ПВЗ — Приём и Выдача</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: 'Inter', sans-serif;
             background: #0B0F1C;
             min-height: 100vh;
         }
-
-        .app {
+        
+        .mode-phone, .mode-pc { display: none; }
+        body.phone-mode .mode-phone { display: block; }
+        body.pc-mode .mode-pc { display: block; }
+        
+        /* Стили для телефона */
+        .phone-container {
             max-width: 450px;
             margin: 0 auto;
-            background: #0B0F1C;
+            padding: 16px;
             min-height: 100vh;
-            position: relative;
         }
-
-        /* Хедер */
-        .header {
-            padding: 20px;
-            background: #0B0F1C;
-            border-bottom: 1px solid #1F2A3E;
+        .phone-header {
+            text-align: center;
+            margin-bottom: 16px;
         }
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo-icon {
+        .phone-logo {
             background: #FF6B00;
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 60px;
             color: white;
-        }
-        .logo-text {
             font-weight: 700;
-            font-size: 18px;
+            font-size: 16px;
+        }
+        
+        /* Переключатель режимов */
+        .mode-toggle {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0;
+            background: #0F172A;
+            padding: 6px;
+            border-radius: 60px;
+        }
+        .mode-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #94A3B8;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .mode-btn.active {
+            background: #FF6B00;
             color: white;
         }
-        .badge {
-            background: #1E293B;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 12px;
-            color: #FF9F6E;
-        }
-
-        /* Сканер */
-        .scanner-card {
-            margin: 16px;
+        .mode-give.active { background: #4ADE80; color: #0B0F1C; }
+        
+        /* Сканер — УВЕЛИЧЕННАЯ ОБЛАСТЬ */
+        .scanner-box {
             background: #0F172A;
             border-radius: 28px;
             overflow: hidden;
@@ -77,23 +75,25 @@
         .video-container {
             position: relative;
             width: 100%;
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 4/3;
             background: #000;
         }
         #reader {
             width: 100%;
             height: 100%;
         }
+        /* Увеличиваем рамку сканирования на весь экран */
         .scan-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 10;
             pointer-events: none;
-            border: 2px solid rgba(255,107,0,0.5);
+            border: 2px solid #FF6B00;
             border-radius: 24px;
-            box-shadow: inset 0 0 0 100vmax rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 0 100vmax rgba(0,0,0,0.4);
             mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
@@ -107,6 +107,7 @@
             height: 2px;
             background: linear-gradient(90deg, transparent, #FF6B00, #FFA559, transparent);
             animation: scanMove 2s infinite;
+            z-index: 11;
             pointer-events: none;
         }
         @keyframes scanMove {
@@ -116,72 +117,113 @@
         }
         .toolbar {
             display: flex;
+            padding: 12px;
             gap: 12px;
-            padding: 12px 16px;
-            background: #0F172A;
-            border-top: 1px solid #1E2A3A;
         }
-        .btn {
+        .btn-scan {
             flex: 1;
             background: #FF6B00;
             border: none;
-            padding: 12px;
+            padding: 14px;
             border-radius: 60px;
             font-weight: 600;
-            font-size: 14px;
             color: white;
             cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-off {
-            background: #1E293B;
-            color: #E2E8F0;
-        }
-        .btn-icon {
-            background: #1E293B;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 60px;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
         }
         .status {
             background: #111827;
-            margin: 12px 16px;
             padding: 10px;
             border-radius: 30px;
             font-size: 12px;
             text-align: center;
             color: #94A3B8;
+            margin: 12px;
         }
-
-        /* Результаты */
-        .results {
-            margin: 16px;
+        .result-card {
             background: #0F172A;
-            border-radius: 28px;
-            padding: 20px;
+            border-radius: 24px;
+            padding: 16px;
+            margin-top: 16px;
         }
-        .results-header {
+        .result-success { border-left: 4px solid #4ADE80; }
+        .result-error { border-left: 4px solid #FF4444; }
+        .result-text { color: white; font-size: 14px; }
+        
+        /* Стили для ПК */
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header {
+            background: #0F172A;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        .results-header h3 {
-            font-size: 18px;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            background: #FF6B00;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
             color: white;
         }
-        .clear-btn {
-            background: none;
-            border: none;
+        .logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+        }
+        .stats {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #1E293B;
+            padding: 12px 24px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
             color: #FF6B00;
-            font-size: 13px;
-            cursor: pointer;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #94A3B8;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        .card {
+            background: #0F172A;
+            border-radius: 24px;
+            padding: 20px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .list {
-            max-height: 280px;
+            max-height: 400px;
             overflow-y: auto;
         }
         .item {
@@ -192,367 +234,594 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-left: 3px solid #FF6B00;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .item-code {
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            word-break: break-all;
-        }
-        .item-time {
-            font-size: 11px;
-            color: #6B7280;
-            margin-top: 4px;
-        }
-        .item-status {
-            background: #0F172A;
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 11px;
-            color: #4ADE80;
-        }
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #4B5563;
-        }
-        .empty i {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
-        .summary {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #1F2A44;
-            display: flex;
-            justify-content: space-between;
-            color: #CBD5E1;
-            font-weight: 600;
-        }
-        .submit-btn {
-            width: 100%;
+        .item-info { flex: 2; }
+        .item-name { color: white; font-weight: 600; font-size: 14px; }
+        .item-code { font-size: 11px; color: #6B7280; margin-top: 4px; }
+        .item-price { font-size: 16px; font-weight: 700; color: #FF6B00; }
+        .btn-sm {
             background: #FF6B00;
             border: none;
-            padding: 14px;
-            border-radius: 60px;
-            font-weight: 700;
-            font-size: 16px;
+            padding: 6px 12px;
+            border-radius: 40px;
             color: white;
-            margin-top: 16px;
+            font-weight: 600;
             cursor: pointer;
         }
-        .toast {
+        .btn-green { background: #4ADE80; color: #0B0F1C; }
+        .empty { text-align: center; padding: 40px; color: #4B5563; }
+        
+        .mode-switch {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 20px;
+            right: 20px;
             background: #1E293B;
-            padding: 12px 24px;
-            border-radius: 60px;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 40px;
             color: white;
-            font-size: 14px;
-            z-index: 200;
-            border-left: 3px solid #FF6B00;
-            white-space: nowrap;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 1000;
         }
-        .hidden {
-            display: none;
+        
+        /* Подсказка для лучшего сканирования */
+        .tip {
+            background: #1E293B;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #94A3B8;
+            text-align: center;
+            margin: 8px;
         }
-        button:active {
-            transform: scale(0.97);
+        .tip i {
+            color: #FF6B00;
         }
     </style>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-<div class="app">
-    <div class="header">
-        <div class="header-top">
-            <div class="logo">
-                <div class="logo-icon">📦</div>
-                <div class="logo-text">Ozon ПВЗ</div>
+    <button class="mode-switch" onclick="toggleDeviceMode()">🔄 Телефон/ПК</button>
+
+    <!-- РЕЖИМ ТЕЛЕФОНА (СКАНЕР) -->
+    <div class="mode-phone">
+        <div class="phone-container">
+            <div class="phone-header">
+                <div class="phone-logo">📦 Ozon ПВЗ Сканер</div>
             </div>
-            <div class="badge">Приёмка товаров</div>
-        </div>
-    </div>
 
-    <div class="scanner-card">
-        <div class="video-container">
-            <div id="reader"></div>
-            <div class="scan-overlay"></div>
-            <div class="scan-line"></div>
-        </div>
-        <div class="toolbar">
-            <button id="startBtn" class="btn">📷 Включить камеру</button>
-            <button id="torchBtn" class="btn-icon">🔦</button>
-        </div>
-        <div id="status" class="status">📱 Нажмите "Включить камеру"</div>
-    </div>
-
-    <div class="results">
-        <div class="results-header">
-            <h3>✅ Принятые товары</h3>
-            <button id="clearBtn" class="clear-btn">Очистить всё</button>
-        </div>
-        <div id="list" class="list">
-            <div class="empty">
-                <i>📷</i>
-                <p>Нет отсканированных товаров</p>
-                <span style="font-size: 12px;">Наведите камеру на штрихкод</span>
+            <!-- Переключатель Приём/Выдача -->
+            <div class="mode-toggle">
+                <button id="receiveModeBtn" class="mode-btn mode-receive active">📥 ПРИЁМ</button>
+                <button id="giveModeBtn" class="mode-btn mode-give">🎁 ВЫДАЧА</button>
             </div>
-        </div>
-        <div class="summary">
-            <span>Всего принято</span>
-            <span id="total">0</span>
-        </div>
-        <button id="confirmBtn" class="submit-btn">📋 Подтвердить приёмку</button>
-    </div>
-</div>
-<div id="toast" class="toast hidden"></div>
 
-<script>
-    let scannedItems = [];
-    let html5QrCode = null;
-    let isScanning = false;
-    let lastCode = '';
-    let lastTime = 0;
+            <!-- Подсказка -->
+            <div class="tip">
+                <i>💡 Совет:</i> Держите телефон на расстоянии 10-20 см от штрихкода при хорошем освещении
+            </div>
 
-    const startBtn = document.getElementById('startBtn');
-    const torchBtn = document.getElementById('torchBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const confirmBtn = document.getElementById('confirmBtn');
-    const listDiv = document.getElementById('list');
-    const totalSpan = document.getElementById('total');
-    const statusDiv = document.getElementById('status');
-    const toastDiv = document.getElementById('toast');
-
-    function showToast(msg, duration = 2000) {
-        toastDiv.innerText = msg;
-        toastDiv.classList.remove('hidden');
-        setTimeout(() => toastDiv.classList.add('hidden'), duration);
-    }
-
-    function getTime() {
-        const now = new Date();
-        return now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-
-    function renderList() {
-        if (scannedItems.length === 0) {
-            listDiv.innerHTML = `<div class="empty">
-                <i>📷</i>
-                <p>Нет отсканированных товаров</p>
-                <span style="font-size: 12px;">Наведите камеру на штрихкод</span>
-            </div>`;
-            totalSpan.innerText = '0';
-            return;
-        }
-        
-        let html = '';
-        [...scannedItems].reverse().forEach(item => {
-            html += `
-                <div class="item">
-                    <div>
-                        <div class="item-code">📦 ${escapeHtml(item.code)}</div>
-                        <div class="item-time">${item.time}</div>
-                    </div>
-                    <div class="item-status">✓ Принят</div>
+            <div class="scanner-box">
+                <div class="video-container">
+                    <div id="reader"></div>
+                    <div class="scan-overlay"></div>
+                    <div class="scan-line"></div>
                 </div>
-            `;
-        });
-        listDiv.innerHTML = html;
-        totalSpan.innerText = scannedItems.length;
-    }
+                <div class="toolbar">
+                    <button id="startBtn" class="btn-scan">📷 Включить камеру</button>
+                </div>
+                <div id="phoneStatus" class="status">📱 Нажмите "Включить камеру"</div>
+            </div>
 
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
+            <div id="lastResult"></div>
+            <div id="historyList" style="margin-top:16px;"></div>
+        </div>
+    </div>
 
-    function addBarcode(code) {
-        if (!code) return;
-        
-        const now = Date.now();
-        if (lastCode === code && now - lastTime < 1200) return;
-        lastCode = code;
-        lastTime = now;
-        
-        scannedItems.push({
-            code: code,
-            time: getTime()
-        });
-        renderList();
-        
-        // Вибрация
-        if (navigator.vibrate) navigator.vibrate(80);
-        
-        // Звук
-        try {
-            const audio = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audio.createOscillator();
-            const gain = audio.createGain();
-            osc.connect(gain);
-            gain.connect(audio.destination);
-            osc.frequency.value = 920;
-            gain.gain.value = 0.15;
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.00001, audio.currentTime + 0.25);
-            osc.stop(audio.currentTime + 0.25);
-            audio.resume();
-        } catch(e) {}
-        
-        showToast(`✅ Товар ${code} принят`, 1000);
-    }
+    <!-- РЕЖИМ ПК (ПАНЕЛЬ УПРАВЛЕНИЯ) -->
+    <div class="mode-pc">
+        <div class="container">
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">📦</div>
+                    <div class="logo-text">Ozon ПВЗ — Панель</div>
+                </div>
+                <div class="stats">
+                    <div class="stat-card"><div class="stat-value" id="acceptedCount">0</div><div class="stat-label">Принято сегодня</div></div>
+                    <div class="stat-card"><div class="stat-value" id="givenCount">0</div><div class="stat-label">Выдано сегодня</div></div>
+                    <div class="stat-card"><div class="stat-value" id="pendingCount">0</div><div class="stat-label">На приёмке</div></div>
+                    <div class="stat-card"><div class="stat-value" id="stockCount">0</div><div class="stat-label">На складе</div></div>
+                </div>
+            </div>
 
-    async function startScanner() {
-        if (isScanning) {
-            showToast("Сканер уже работает");
-            return;
-        }
-        
-        statusDiv.innerHTML = '🔄 Запрос доступа к камере...';
-        
-        try {
-            if (html5QrCode) {
-                try {
-                    await html5QrCode.stop();
-                } catch(e) {}
-            }
-            
-            html5QrCode = new Html5Qrcode("reader");
-            
-            const config = {
-                fps: 15,
-                qrbox: { width: 280, height: 200 },
-                aspectRatio: 4/3,
-                videoConstraints: {
-                    facingMode: "environment"
-                }
-            };
-            
-            await html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                (decodedText) => {
-                    if (decodedText && decodedText.length > 0) {
-                        addBarcode(decodedText);
-                    }
-                },
-                (errorMessage) => {
-                    // Игнорируем ошибки сканирования
-                }
-            );
-            
-            isScanning = true;
-            startBtn.innerHTML = '⏹️ Остановить сканер';
-            startBtn.classList.add('btn-off');
-            statusDiv.innerHTML = '✅ Камера работает. Наведите на штрихкод';
-            statusDiv.style.color = '#4ADE80';
-            showToast("✅ Сканер запущен", 1500);
-            
-        } catch (err) {
-            console.error("Ошибка:", err);
-            
-            if (err === 'NotAllowedError') {
-                statusDiv.innerHTML = '❌ Нет доступа к камере. Разрешите в браузере';
-                showToast("⚠️ Разрешите доступ к камере в настройках браузера", 4000);
-            } else if (err === 'NotFoundError') {
-                statusDiv.innerHTML = '❌ Камера не найдена на устройстве';
-                showToast("Камера не найдена", 3000);
-            } else {
-                statusDiv.innerHTML = '❌ Ошибка: ' + (err.message || 'неизвестная ошибка');
-                showToast("Ошибка доступа к камере", 3000);
-            }
-        }
-    }
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">
+                        📥 На приёмку
+                        <button id="acceptAllBtn">✅ Принять всё</button>
+                    </div>
+                    <div id="pendingList" class="list"></div>
+                </div>
 
-    async function stopScanner() {
-        if (html5QrCode && isScanning) {
+                <div class="card">
+                    <div class="card-title">
+                        🎁 Заказы на выдачу
+                    </div>
+                    <div id="ordersList" class="list"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        📦 Склад (можно выдать)
+                    </div>
+                    <div id="stockList" class="list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== ДАННЫЕ ==========
+        let pvzData = {
+            pendingItems: [
+                { id: 1, name: "Xiaomi Note 12", barcode: "4601234567890", price: 24990, quantity: 5 },
+                { id: 2, name: "Huawei FreeBuds", barcode: "4601234567891", price: 4990, quantity: 10 },
+                { id: 3, name: "Зарядка 65W", barcode: "4601234567892", price: 1290, quantity: 15 },
+                { id: 4, name: "Чехол iPhone 15", barcode: "4601234567893", price: 890, quantity: 20 },
+                { id: 5, name: "Power Bank", barcode: "4601234567894", price: 2990, quantity: 8 },
+                { id: 6, name: "Ноутбук Honor", barcode: "4601234567895", price: 59990, quantity: 3 }
+            ],
+            stock: [
+                { id: 7, name: "Фитнес-браслет", barcode: "4601234567896", price: 3990, quantity: 12 },
+                { id: 8, name: "Bluetooth колонка", barcode: "4601234567897", price: 3490, quantity: 6 },
+                { id: 9, name: "Мышь Logitech", barcode: "4601234567898", price: 990, quantity: 15 }
+            ],
+            orders: [
+                { id: "OZ-1001", customer: "Анна Смирнова", phone: "+7 999 123-45-67", items: "Чехол iPhone 15 (2 шт.)", total: 1780, status: "ready", barcode: "ORD1001" },
+                { id: "OZ-1002", customer: "Михаил Петров", phone: "+7 999 234-56-78", items: "Фитнес-браслет (1 шт.)", total: 3990, status: "ready", barcode: "ORD1002" },
+                { id: "OZ-1003", customer: "Елена Козлова", phone: "+7 999 345-67-89", items: "Мышь Logitech (1 шт.)", total: 990, status: "ready", barcode: "ORD1003" }
+            ],
+            scans: [],
+            stats: { acceptedToday: 0, givenToday: 0, totalMoney: 0 }
+        };
+
+        let scannerMode = "receive";
+        let isScanning = false;
+        let html5QrCode = null;
+        let lastCode = '';
+        let lastTime = 0;
+        let phoneHistory = [];
+
+        // ========== ЗВУКИ ==========
+        function playSuccessBeep() {
             try {
-                await html5QrCode.stop();
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 1100;
+                gain.gain.value = 0.25;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+                osc.stop(audioCtx.currentTime + 0.2);
+                audioCtx.resume();
             } catch(e) {}
         }
-        isScanning = false;
-        startBtn.innerHTML = '📷 Включить камеру';
-        startBtn.classList.remove('btn-off');
-        statusDiv.innerHTML = '📱 Сканер остановлен';
-        statusDiv.style.color = '#94A3B8';
-    }
-
-    async function toggleTorch() {
-        if (!isScanning || !html5QrCode) {
-            showToast("Сначала включите камеру");
-            return;
-        }
         
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            const track = stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities();
-            
-            if (capabilities.torch) {
-                await track.applyConstraints({ advanced: [{ torch: !window.torchState }] });
-                window.torchState = !window.torchState;
-                showToast(window.torchState ? "🔦 Фонарик включён" : "💡 Фонарик выключен");
-                torchBtn.style.background = window.torchState ? '#FF6B00' : '#1E293B';
-            } else {
-                showToast("Фонарик не поддерживается");
+        function playErrorBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 440;
+                gain.gain.value = 0.2;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+                osc.stop(audioCtx.currentTime + 0.3);
+                audioCtx.resume();
+            } catch(e) {}
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('ozon_pvz_data');
+            if (saved) pvzData = JSON.parse(saved);
+            else saveData();
+        }
+
+        function saveData() {
+            localStorage.setItem('ozon_pvz_data', JSON.stringify(pvzData));
+            localStorage.setItem('ozon_update', Date.now().toString());
+            if (document.body.classList.contains('pc-mode')) renderAllPC();
+        }
+
+        function giveFromStock(itemId) {
+            const item = pvzData.stock.find(i => i.id === itemId);
+            if (item && item.quantity > 0) {
+                item.quantity--;
+                pvzData.stats.givenToday++;
+                pvzData.stats.totalMoney += item.price;
+                pvzData.scans.unshift({ code: item.barcode, time: new Date().toLocaleTimeString(), result: `🎁 Выдан: ${item.name}` });
+                if (pvzData.scans.length > 30) pvzData.scans.pop();
+                saveData();
+                if (document.body.classList.contains('pc-mode')) renderAllPC();
+                playSuccessBeep();
+                showToastPC(`🎁 ${item.name} выдан`);
+                
+                if (item.quantity === 0) {
+                    pvzData.stock = pvzData.stock.filter(i => i.id !== itemId);
+                    saveData();
+                    if (document.body.classList.contains('pc-mode')) renderAllPC();
+                }
             }
-            stream.getTracks().forEach(t => t.stop());
-        } catch(e) {
-            showToast("Фонарик не поддерживается");
         }
-    }
 
-    function clearAll() {
-        if (scannedItems.length === 0) {
-            showToast("Список пуст");
-            return;
+        // ========== ТЕЛЕФОН ==========
+        function initPhoneMode() {
+            loadData();
+            
+            const savedHistory = localStorage.getItem('phone_scan_history');
+            if (savedHistory) phoneHistory = JSON.parse(savedHistory);
+            renderPhoneHistory();
+            
+            const receiveBtn = document.getElementById('receiveModeBtn');
+            const giveBtn = document.getElementById('giveModeBtn');
+            
+            receiveBtn.onclick = () => {
+                scannerMode = "receive";
+                receiveBtn.classList.add('active');
+                giveBtn.classList.remove('active');
+                document.getElementById('phoneStatus').innerHTML = '📥 Режим ПРИЁМА. Сканируйте товары';
+                playSuccessBeep();
+            };
+            
+            giveBtn.onclick = () => {
+                scannerMode = "give";
+                giveBtn.classList.add('active');
+                receiveBtn.classList.remove('active');
+                document.getElementById('phoneStatus').innerHTML = '🎁 Режим ВЫДАЧИ. Сканируйте заказы';
+                playSuccessBeep();
+            };
+            
+            const startBtn = document.getElementById('startBtn');
+            const phoneStatus = document.getElementById('phoneStatus');
+            const lastResultDiv = document.getElementById('lastResult');
+            
+            function renderPhoneHistory() {
+                const historyDiv = document.getElementById('historyList');
+                if (phoneHistory.length === 0) {
+                    historyDiv.innerHTML = '<div class="status">📋 Нет сканирований</div>';
+                    return;
+                }
+                let html = '';
+                phoneHistory.slice(0, 5).forEach(item => {
+                    let color = item.result.includes('✅') || item.result.includes('🎁') ? '#4ADE80' : '#FF6B00';
+                    html += `<div class="result-card result-success" style="padding:12px; margin-bottom:8px;">
+                                <div class="result-text" style="color:${color}">${item.result}</div>
+                                <div style="font-size:10px; color:#6B7280;">${item.time}</div>
+                            </div>`;
+                });
+                historyDiv.innerHTML = html;
+            }
+            
+            function addToHistory(code, result) {
+                phoneHistory.unshift({ code, result, time: new Date().toLocaleTimeString() });
+                if (phoneHistory.length > 10) phoneHistory.pop();
+                localStorage.setItem('phone_scan_history', JSON.stringify(phoneHistory));
+                renderPhoneHistory();
+            }
+            
+            function processScan(code) {
+                const now = Date.now();
+                if (lastCode === code && now - lastTime < 1500) return;
+                lastCode = code;
+                lastTime = now;
+                
+                let result = { success: false, message: '', type: '' };
+                
+                if (scannerMode === "receive") {
+                    const pendingIndex = pvzData.pendingItems.findIndex(i => i.barcode === code);
+                    if (pendingIndex !== -1) {
+                        const item = pvzData.pendingItems[pendingIndex];
+                        pvzData.pendingItems.splice(pendingIndex, 1);
+                        pvzData.stock.push({ ...item });
+                        pvzData.stats.acceptedToday += item.quantity;
+                        result = { success: true, message: `✅ Принят: ${item.name} (${item.quantity} шт.)`, type: 'accept' };
+                    } else {
+                        result = { success: false, message: `⚠️ Товар с кодом ${code} не найден`, type: 'error' };
+                    }
+                } else {
+                    const orderIndex = pvzData.orders.findIndex(o => o.barcode === code || o.id === code);
+                    if (orderIndex !== -1) {
+                        const order = pvzData.orders[orderIndex];
+                        if (order.status === 'ready') {
+                            order.status = 'given';
+                            pvzData.stats.givenToday++;
+                            pvzData.stats.totalMoney += order.total;
+                            result = { success: true, message: `🎁 Выдан заказ ${order.id} (${order.customer})`, type: 'give' };
+                        } else {
+                            result = { success: false, message: `❌ Заказ ${order.id} уже выдан`, type: 'error' };
+                        }
+                    } else {
+                        const stockIndex = pvzData.stock.findIndex(i => i.barcode === code);
+                        if (stockIndex !== -1 && pvzData.stock[stockIndex].quantity > 0) {
+                            const item = pvzData.stock[stockIndex];
+                            item.quantity--;
+                            pvzData.stats.givenToday++;
+                            pvzData.stats.totalMoney += item.price;
+                            result = { success: true, message: `🎁 Выдан со склада: ${item.name}`, type: 'give' };
+                            if (item.quantity === 0) {
+                                pvzData.stock.splice(stockIndex, 1);
+                            }
+                        } else {
+                            result = { success: false, message: `⚠️ Товар с кодом ${code} не найден`, type: 'error' };
+                        }
+                    }
+                }
+                
+                saveData();
+                
+                const icon = result.success ? (result.type === 'accept' ? '✅' : '🎁') : '⚠️';
+                const resultClass = result.success ? 'result-success' : 'result-error';
+                lastResultDiv.innerHTML = `
+                    <div class="result-card ${resultClass}">
+                        <div class="result-text">${icon} ${result.message}</div>
+                        <div style="font-size:10px; color:#6B7280;">${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+                
+                addToHistory(code, result.message);
+                
+                if (result.success) {
+                    playSuccessBeep();
+                    if (navigator.vibrate) navigator.vibrate(100);
+                } else {
+                    playErrorBeep();
+                    if (navigator.vibrate) navigator.vibrate(200);
+                }
+                
+                phoneStatus.innerHTML = result.success ? '✅ Готов!' : '❌ Ошибка';
+                setTimeout(() => {
+                    phoneStatus.innerHTML = scannerMode === "receive" 
+                        ? '📥 Режим ПРИЁМА. Сканируйте товары' 
+                        : '🎁 Режим ВЫДАЧИ. Сканируйте заказы';
+                }, 2000);
+            }
+            
+            async function startScanner() {
+                if (isScanning) return;
+                phoneStatus.innerHTML = '🔄 Запрос доступа к камере...';
+                try {
+                    if (html5QrCode) { try { await html5QrCode.stop(); } catch(e) {} }
+                    
+                    html5QrCode = new Html5Qrcode("reader");
+                    
+                    // УЛУЧШЕННЫЕ НАСТРОЙКИ ДЛЯ ЛУЧШЕГО РАСПОЗНАВАНИЯ
+                    const config = {
+                        fps: 20,                        // больше кадров в секунду
+                        qrbox: { width: 350, height: 250 },  // УВЕЛИЧЕННАЯ область сканирования
+                        aspectRatio: 4/3,
+                        videoConstraints: {
+                            facingMode: "environment",
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    };
+                    
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        (decodedText) => { if (decodedText) processScan(decodedText); },
+                        (errorMessage) => { /* игнорируем ошибки сканирования */ }
+                    );
+                    
+                    isScanning = true;
+                    startBtn.innerHTML = '⏹️ Остановить';
+                    phoneStatus.innerHTML = scannerMode === "receive" 
+                        ? '📥 Режим ПРИЁМА. Наведите камеру на штрихкод' 
+                        : '🎁 Режим ВЫДАЧИ. Наведите камеру на штрихкод';
+                    phoneStatus.style.color = '#4ADE80';
+                    
+                } catch(err) {
+                    console.error(err);
+                    phoneStatus.innerHTML = '❌ Ошибка доступа к камере. Разрешите доступ';
+                }
+            }
+            
+            async function stopScanner() {
+                if (html5QrCode && isScanning) {
+                    try { await html5QrCode.stop(); } catch(e) {}
+                }
+                isScanning = false;
+                startBtn.innerHTML = '📷 Включить камеру';
+                phoneStatus.innerHTML = '📱 Сканер остановлен';
+                phoneStatus.style.color = '#94A3B8';
+            }
+            
+            startBtn.onclick = () => isScanning ? stopScanner() : startScanner();
         }
-        scannedItems = [];
-        lastCode = '';
-        renderList();
-        showToast("🗑️ Список очищен");
-    }
 
-    function confirmPickup() {
-        if (scannedItems.length === 0) {
-            showToast("❌ Нет товаров для приёмки");
-            return;
+        // ========== ПК ==========
+        function initPCMode() {
+            loadData();
+            renderAllPC();
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'ozon_pvz_data' || e.key === 'ozon_update') {
+                    loadData();
+                    renderAllPC();
+                }
+            });
         }
-        showToast(`📦 Приёмка оформлена! Принято ${scannedItems.length} товаров`, 3000);
         
-        confirmBtn.style.background = "#2E8B57";
-        setTimeout(() => {
-            confirmBtn.style.background = "#FF6B00";
-        }, 300);
-    }
+        function renderAllPC() {
+            renderPending();
+            renderOrders();
+            renderStock();
+            updateStatsPC();
+        }
+        
+        function renderPending() {
+            const container = document.getElementById('pendingList');
+            if (!pvzData.pendingItems.length) {
+                container.innerHTML = '<div class="empty">✅ Нет товаров на приёмку</div>';
+                return;
+            }
+            let html = '';
+            pvzData.pendingItems.forEach(item => {
+                html += `<div class="item">
+                            <div class="item-info">
+                                <div class="item-name">📦 ${item.name}</div>
+                                <div class="item-code">${item.barcode}</div>
+                                <div class="item-quantity">${item.quantity} шт.</div>
+                            </div>
+                            <div class="item-price">${item.price.toLocaleString()} ₽</div>
+                            <button class="btn-sm" onclick="acceptItemPC(${item.id})">✅ Принять</button>
+                        </div>`;
+            });
+            container.innerHTML = html;
+        }
+        
+        function renderOrders() {
+            const container = document.getElementById('ordersList');
+            const readyOrders = pvzData.orders.filter(o => o.status === 'ready');
+            if (!readyOrders.length) {
+                container.innerHTML = '<div class="empty">🎁 Нет заказов</div>';
+                return;
+            }
+            let html = '';
+            readyOrders.forEach(order => {
+                html += `<div class="item">
+                            <div class="item-info">
+                                <div class="item-name">Заказ ${order.id}</div>
+                                <div class="item-code">${order.customer}</div>
+                            </div>
+                            <div class="item-price">${order.total.toLocaleString()} ₽</div>
+                            <button class="btn-sm btn-green" onclick="giveOrderPC('${order.id}')">🎁 Выдать</button>
+                        </div>`;
+            });
+            container.innerHTML = html;
+        }
+        
+        function renderStock() {
+            const container = document.getElementById('stockList');
+            if (!pvzData.stock.length) {
+                container.innerHTML = '<div class="empty">📦 Склад пуст</div>';
+                return;
+            }
+            let html = '';
+            pvzData.stock.forEach(item => {
+                html += `<div class="item">
+                            <div class="item-info">
+                                <div class="item-name">📦 ${item.name}</div>
+                                <div class="item-code">${item.barcode}</div>
+                                <div class="item-quantity">${item.quantity} шт.</div>
+                            </div>
+                            <div class="item-price">${item.price.toLocaleString()} ₽</div>
+                            <button class="btn-sm btn-green" onclick="giveFromStock(${item.id})">🎁 Выдать</button>
+                        </div>`;
+            });
+            container.innerHTML = html;
+        }
+        
+        function updateStatsPC() {
+            document.getElementById('acceptedCount').innerText = pvzData.stats.acceptedToday || 0;
+            document.getElementById('givenCount').innerText = pvzData.stats.givenToday || 0;
+            document.getElementById('pendingCount').innerText = pvzData.pendingItems.length;
+            document.getElementById('stockCount').innerText = pvzData.stock.reduce((sum, i) => sum + i.quantity, 0);
+        }
+        
+        window.acceptItemPC = function(id) {
+            const item = pvzData.pendingItems.find(i => i.id === id);
+            if (item) {
+                pvzData.pendingItems = pvzData.pendingItems.filter(i => i.id !== id);
+                pvzData.stock.push({ ...item });
+                pvzData.stats.acceptedToday += item.quantity;
+                saveData();
+                renderAllPC();
+                playSuccessBeep();
+                showToastPC(`✅ ${item.name} принят`);
+            }
+        };
+        
+        window.giveOrderPC = function(orderId) {
+            const order = pvzData.orders.find(o => o.id === orderId);
+            if (order && order.status === 'ready') {
+                order.status = 'given';
+                pvzData.stats.givenToday++;
+                pvzData.stats.totalMoney += order.total;
+                saveData();
+                renderAllPC();
+                playSuccessBeep();
+                showToastPC(`🎁 Заказ ${orderId} выдан`);
+            }
+        };
+        
+        window.giveFromStock = giveFromStock;
+        
+        function acceptAllPC() {
+            pvzData.pendingItems.forEach(item => {
+                pvzData.stock.push({ ...item });
+                pvzData.stats.acceptedToday += item.quantity;
+            });
+            pvzData.pendingItems = [];
+            saveData();
+            renderAllPC();
+            playSuccessBeep();
+            showToastPC(`✅ Принято всё`);
+        }
+        
+        function showToastPC(msg) {
+            const toast = document.createElement('div');
+            toast.innerText = msg;
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.background = '#1E293B';
+            toast.style.padding = '10px 20px';
+            toast.style.borderRadius = '40px';
+            toast.style.color = 'white';
+            toast.style.zIndex = '1000';
+            toast.style.borderLeft = '3px solid #FF6B00';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+        
+        document.getElementById('acceptAllBtn').onclick = acceptAllPC;
 
-    // Обработчики
-    startBtn.addEventListener('click', () => {
-        if (isScanning) {
-            stopScanner();
+        // ========== ПЕРЕКЛЮЧЕНИЕ ==========
+        function toggleDeviceMode() {
+            if (document.body.classList.contains('phone-mode')) {
+                document.body.classList.remove('phone-mode');
+                document.body.classList.add('pc-mode');
+                initPCMode();
+                localStorage.setItem('ozon_mode', 'pc');
+            } else {
+                document.body.classList.remove('pc-mode');
+                document.body.classList.add('phone-mode');
+                initPhoneMode();
+                localStorage.setItem('ozon_mode', 'phone');
+            }
+        }
+        
+        window.toggleDeviceMode = toggleDeviceMode;
+        
+        const savedMode = localStorage.getItem('ozon_mode');
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (savedMode === 'pc' && !isMobile) {
+            document.body.classList.add('pc-mode');
+            initPCMode();
+        } else if (savedMode === 'phone' || isMobile) {
+            document.body.classList.add('phone-mode');
+            initPhoneMode();
         } else {
-            startScanner();
+            document.body.classList.add('pc-mode');
+            initPCMode();
         }
-    });
-    
-    torchBtn.addEventListener('click', toggleTorch);
-    clearBtn.addEventListener('click', clearAll);
-    confirmBtn.addEventListener('click', confirmPickup);
-    
-    // Очистка при закрытии
-    window.addEventListener('beforeunload', () => {
-        if (html5QrCode && isScanning) {
-            html5QrCode.stop().catch(() => {});
-        }
-    });
-</script>
+    </script>
 </body>
 </html>
